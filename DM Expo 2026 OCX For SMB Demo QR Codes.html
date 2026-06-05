@@ -869,11 +869,17 @@ function ripple(el, e) {
 })();
 
 // ── Download ─────────────────────────────────────────
+const IS_MOBILE = /iPad|iPhone|iPod|Android/i.test(navigator.userAgent);
+
 async function shareOrDownload(blob, filename) {
-  const file = new File([blob], filename, { type: blob.type });
-  if (navigator.canShare && navigator.canShare({ files: [file] })) {
-    try { await navigator.share({ files: [file], title: filename }); return; } catch(e) {}
+  // On iOS/Android use native share sheet (more reliable than a[download])
+  if (IS_MOBILE) {
+    const file = new File([blob], filename, { type: blob.type });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      try { await navigator.share({ files: [file], title: filename }); return; } catch(e) {}
+    }
   }
+  // Desktop or share fallback: direct download
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url; a.download = filename;
